@@ -1,0 +1,29 @@
+---
+title: "Human Activity Recognition"
+author: "Chase Chapman"
+date: "October 5, 2015"
+output: html_document
+---
+
+## Executive Summary
+The ability to track movements and determine the exercise being performed or, potentionally more valuabe, to determine if the exercise being performed is done correctly can provide great advantage to professional athletes and weekend warriors alike. With the increase in fitness related data collection devices the ability to recognize poorly performed exercises can not only increase a persons overall fitness but prevent serious injury. The following will utilize data collected from 6 males performing a safe dumbbell curve (classe A) followed by 4 performances incorporating common mistakes.
+
+## Data Analysis
+
+# Loading and Processing
+After loading the data the averages, standard deviations, etc. are removed, leaving the raw data. This was done for two primary reasons; to reduce the number of variables by removing those variables that are summarizations of the raw data and to reduce the number of NAs in the data.
+```{r}
+require(caret)
+training <- read.csv("pml-training.csv",na.strings=c("","NA"))
+set.seed(1214)
+training <- training[,!apply(is.na(training[1,]),2,any)]
+training <- training[,8:60]
+```   
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
