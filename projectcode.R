@@ -10,7 +10,7 @@ set.seed(1214)
 training <- training[,!apply(is.na(training[1,]),2,any)]
 training <- training[,8:60]
 
-RFfit <- train(classe~.,data=training,method="rf",trControl=trainControl(method="cv",number=5),prox=TRUE,allowParallel=TRUE)
+
 ## Need to come up with a way to separate the training data into a Training Set
 ## and a Test Set.
 inTrain <- createDataPartition(y=training[,1],p=0.6,list=FALSE)
@@ -79,3 +79,8 @@ mean(KNN5pred==test.true)
 ## Computes the percent of correct predictions
 table(KNN10pred,test.true)
 mean(KNN10pred==test.true)
+
+## Random Forest Model
+RFfit <- train(classe~.,data=training,method="rf",
+               trControl=trainControl(method="cv",number=5),
+               prox=TRUE,allowParallel=TRUE)

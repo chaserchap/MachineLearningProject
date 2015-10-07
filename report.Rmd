@@ -2,28 +2,83 @@
 title: "Human Activity Recognition"
 author: "Chase Chapman"
 date: "October 5, 2015"
-output: html_document
+output:
+  html_document:
+    highlight: tango
+    theme: journal
 ---
 
 ## Executive Summary
-The ability to track movements and determine the exercise being performed or, potentionally more valuabe, to determine if the exercise being performed is done correctly can provide great advantage to professional athletes and weekend warriors alike. With the increase in fitness related data collection devices the ability to recognize poorly performed exercises can not only increase a persons overall fitness but prevent serious injury. The following will utilize data collected from 6 males performing a safe dumbbell curve (classe A) followed by 4 performances incorporating common mistakes.
+The ability to track movements and determine the exercise being performed or, potentially more valuable, to determine if the exercise being performed is done correctly can provide great advantage to professional athletes and weekend warriors alike. With the increase in fitness related data collection devices the ability to recognize poorly performed exercises can not only increase a persons overall fitness but prevent serious injury. 
 
 ## Data Analysis
 
-# Loading and Processing
-After loading the data the averages, standard deviations, etc. are removed, leaving the raw data. This was done for two primary reasons; to reduce the number of variables by removing those variables that are summarizations of the raw data and to reduce the number of NAs in the data.
-```{r}
+### Data Summary
+Data was collected from six males while the individuals performed 10 repetitions of the Unilateral Dumbbell Curl. After performing the exercise using proper form the individuals were asked to perform the exercise again while intentionally committing four common mistakes. Various derived features were calculated on windows using a sliding window approach.
+
+### Loading and Processing
+After loading the data the averages, standard deviations, etc. are removed, leaving the raw data. Derived features were removed due to a desire to utilize the raw data and to reduce the number of NAs in the data. Of note, the provided test data does not provide any of the derived features, though in the original study the derived features were used vice the raw features. Time stamps and names were also removed.
+
+```{r Initialization, message=FALSE}
 require(caret)
+require(randomForest)
+require(MASS)
+require(knitr)
 training <- read.csv("pml-training.csv",na.strings=c("","NA"))
-set.seed(1214)
+testing <- read.csv("pml-testing.csv",na.strings=c("","NA"))
 training <- training[,!apply(is.na(training[1,]),2,any)]
+testing <- testing[,!apply(is.na(testing[1,]),2,any)]
 training <- training[,8:60]
+testing <- testing[,8:60]
 ```   
 
-You can also embed plots, for example:
+Next the training data set was split into two subsets, train and test. All training was  done on the train set and validated against the test set, note that this is different than the testing set and was created to validate the model separate from the testing set. Cross validation was also be used, but based on the computational limitations test/train subsets are the primary source of validation.
 
-```{r, echo=FALSE}
-plot(cars)
+```{r Data Splitting}
+set.seed(1214)
+inTrain <- createDataPartition(y=training[,1],p=0.6,list=FALSE)
+test <- training[-inTrain,]
+trainer <- training[inTrain,]
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+### Quantitative Discriminant Analysis
+Initially a Linear Discriminant Analysis approach was attempted, but proved inferior to the QDA seen below. The test set created above is used to validate the model. As shown the QDA provides an accuracy of 90%, depending on the application this would be more than sufficient.
+
+``` {r QDA}
+QDAtime = proc.time()
+QDAfit <- train(trainer$classe~., method = "qda",data=trainer)
+QDAtime = proc.time() - QDAtime
+QDApred <- predict(QDAfit,newdata=test)
+confusionMatrix(test$classe,predict(QDAfit,test))
+```
+
+### Random Forest
+Upon further investigation it was determined that accuracy could be drastically improved utilizing a Random Forest model. As seen the Random Forest model produced an accuracy of an astounding 99.4%, validated using 5-fold Cross Validation. 
+
+``` {r RF}
+RFtime = proc.time()
+RFfit <- train(classe~.,data=training,
+               method="rf",trControl=trainControl(method="cv",number=5),
+               prox=TRUE,allowParallel=TRUE)
+RFtime = proc.time() - RFtime
+print(RFfit)
+```
+
+### Comparison
+The time required to fit a Random Forest model is substantially longer than fitting a QDA model.
+
+``` {r time}
+cat(c('Time to fit QDA Model:'," ",QDAtime))
+cat(c('Time to fit RF Model:'," ",RFtime))
+```
+
+However the out of sample error rate for the Random Forest is significantly lower. Interestingly, on the testing data provided the two models performed identically (and predicted all 20 observations correctly).
+
+``` {r testing, echo=FALSE}
+RFpredictions <- as.character(predict(RFfit,testing))
+QDApredictions <- as.character(predict(QDAfit,testing))
+kable(data.frame(cbind(RFpredictions,QDApredictions)))
+```
+
+## Conclusion
+The two models presented both provide benefits. The Qualitative Discriminant Analysis provided a good error rate while being very quick. The Random Forest model provided an excellent error rate but performed much more slowly. Depending on the application, the QDA model would be much more efficient and provide a more than sufficient error rate.
