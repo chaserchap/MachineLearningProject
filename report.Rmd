@@ -41,7 +41,7 @@ test <- training[-inTrain,]
 trainer <- training[inTrain,]
 ```
 
-### Quantitative Discriminant Analysis
+### Quadratic Discriminant Analysis
 Initially a Linear Discriminant Analysis approach was attempted, but proved inferior to the QDA seen below. The test set created above is used to validate the model. As shown the QDA provides an accuracy of 90%, depending on the application this would be more than sufficient.
 
 ``` {r QDA}
@@ -68,11 +68,11 @@ print(RFfit)
 The time required to fit a Random Forest model is substantially longer than fitting a QDA model.
 
 ``` {r time}
-cat(c('Time to fit QDA Model:'," ",QDAtime))
-cat(c('Time to fit RF Model:'," ",RFtime))
+cat(c('Time to fit QDA Model:'," ",QDAtime[3]/60, " minutes"))
+cat(c('Time to fit RF Model:'," ",RFtime[3]/60, " minutes"))
 ```
 
-However the out of sample error rate for the Random Forest is significantly lower. Interestingly, on the testing data provided the two models performed identically (and predicted all 20 observations correctly).
+However the out of sample error rate for the Random Forest is significantly lower. As seen below the two models performed nearly identically, with the QDA incorrectly predicting just one of the observations.
 
 ``` {r testing, echo=FALSE}
 RFpredictions <- as.character(predict(RFfit,testing))
@@ -81,4 +81,7 @@ kable(data.frame(cbind(RFpredictions,QDApredictions)))
 ```
 
 ## Conclusion
-The two models presented both provide benefits. The Qualitative Discriminant Analysis provided a good error rate while being very quick. The Random Forest model provided an excellent error rate but performed much more slowly. Depending on the application, the QDA model would be much more efficient and provide a more than sufficient error rate.
+The two models presented both provide benefits and the choice between them depends on which is more important for the end goal, ability to quickly fit the model or extreme accuracy. The Quadratic Discriminant Analysis provided a good error rate while being very quick. The Random Forest model provided an excellent error rate but performed much more slowly. Depending on the application, the QDA model would be much more efficient and provide a more than sufficient error rate.
+
+## References
+Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13) . Stuttgart, Germany: ACM SIGCHI, 2013.
